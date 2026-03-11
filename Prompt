@@ -22,3 +22,16 @@ CLI Should have following functionality:
 4. Piping Datafile selection
 
 For the first stage just give me only very necessory folder structure for project e.g. only conda and pip package generation related setup not more. if you think some file is necessory give me that too.
+
+
+now my idea is to create a 2D Drawing Symbol inside the each python file such that it will be projected to any one of the Plane e.g. XY or YZ or ZX during runtime and it will be rotated based on the requirement in isometric.
+Additionally each symbol file will have connection points array mandatory which will hold the points from where next symbol will start detailing.
+
+e.g. elbo has 2 points 1 input 2 output. and output will be connected to some other element etc.
+
+so now my idea is to 
+1. first write the code for elbo and straight pipe then 
+2. i am thinking about testing the elbo connection 
+3. additing pipe and elbo with marking dimensions.
+
+if you have any question ask me else let's built it step by step and ask me questions if you are not clear.
