@@ -1,0 +1,24 @@
+Let's start building all idea one by one. i need all the functionality available with other isometric tools but let's divide the idea and start with small pieces. So, Idea is to 
+- create a symbol in each seperate python file and if user want's to put their own symbol they can create more symbol. This python file will have certain parameters as input and it will place symbol accordingly in isometric drawings with dimensions.
+- Output should be in pdf, svg and any cad supportive formate e.g. step, etc 
+
+so for this purpose first give me folder structure for generating my pip package with conda package
+
+
+Repo name & Package name- OPE-IsoGen
+Default: pythonocc-core
+
+Python version Latest and compatible with pip
+
+Plugin style for symbols should be discovered based on configuration txt file available in any specific path. and when they import the package, user should be able to add extra folder in python for discovering the files such that debugging will become easy for users.
+
+
+start with Pipe Data file.txt as input -> SVG →  then CAd Format & PDFs whichever format is selected
+
+CLI Should have following functionality:
+1. Option for choosing the configuration file.
+2. Generate file based on output type
+3. Type of operation we are asking e.g. Data load, isoGenerate, Data process... basically these operation type we will be removing based on future expansion but currently we don''t have anything and to test our code we need extensibility
+4. Piping Datafile selection
+
+For the first stage just give me only very necessory folder structure for project e.g. only conda and pip package generation related setup not more. if you think some file is necessory give me that too.

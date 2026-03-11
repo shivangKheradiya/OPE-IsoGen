@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "OPE-IsoGen"
+version = "0.0.1"
+description = "Piping isometric engine (initial scaffold)"
+authors = [{ name="Shivang Kheradiya" }]
+readme = "README.md"
+requires-python = ">=3.10"
+
+[project.scripts]
+opeisogen = "OPE_IsoGen.cli.main:cli"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
