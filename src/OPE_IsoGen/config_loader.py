@@ -1,5 +1,5 @@
 import os
-import importlib
+import importlib.util
 import glob
 
 CONFIG_DEFAULT = "symbol_paths.txt"

@@ -416,3 +416,7 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Project Related files removed
+[Tt]est/
+OPE_IsoGen.egg-info/

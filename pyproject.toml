@@ -9,6 +9,9 @@ description = "Piping isometric engine (initial scaffold)"
 authors = [{ name="Shivang Kheradiya" }]
 readme = "README.md"
 requires-python = ">=3.10"
+dependencies = [
+  "click",
+]
 
 [project.scripts]
 opeisogen = "OPE_IsoGen.cli.main:cli"
@@ -18,3 +21,6 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[project.optional-dependencies]
+occt = ["pythonocc-core"]
