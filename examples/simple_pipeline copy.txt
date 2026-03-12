@@ -1,0 +1,92 @@
+# ============================================================
+#  OPE-IsoGen SAMPLE PIPELINE FILE (PCF/IDF compatible)
+#  Version: 1.0
+#
+#  Notes:
+#   - One component per line.
+#   - Use KEY=VALUE pairs (similar to PCF).
+#   - Attributes automatically convert to numeric codes.
+#   - SKEY is auto-filled from component type.
+# ============================================================
+
+
+# -------------------------------
+# First straight pipe (100)
+# -------------------------------
+PIPE, OD=100, LENGTH=400
+
+
+# -------------------------------
+# 90° Butt-weld Elbow (ELBW = 101)
+# CLR (centerline radius) omitted → default = 1.5 × OD
+# -------------------------------
+ELBOW, OD=100, ANGLE=90
+
+
+# -------------------------------
+# Second straight pipe (100)
+# -------------------------------
+PIPE, OD=100, LENGTH=300
+
+
+# -------------------------------
+# 45° Butt-weld Elbow (ELBW = 101)
+# CLR explicitly defined here
+# -------------------------------
+ELBOW, OD=100, ANGLE=45, CLR=150
+
+
+# -------------------------------
+# Third straight pipe (100)
+# -------------------------------
+PIPE, OD=100, LENGTH=500
+
+
+# ===============================================================
+#  SIMPLE PIPELINE (OPE‑IsoGen IDF-style Transfer File)
+#  Version: 1.0
+#
+#  Rules:
+#    - One component per line
+#    - Format:  <COMP_CODE> <ATTR_CODE>=<VALUE> <ATTR_CODE>=<VALUE> ...
+#    - Codes come from attribute_codes.py
+#    - Comments start with '#'
+#
+#  Component Codes:
+#      100 = PIPE
+#      101 = ELBOW (ELBW)
+#
+# ===============================================================
+
+
+# --------------------------------------
+# Straight Pipe: OD=100, LENGTH=400
+# --------------------------------------
+100  1001=100  1004=400
+
+
+# --------------------------------------
+# Elbow 90° (ELBW)
+# OD=100, ANGLE=90
+# CLR omitted → default inside Elbow2D
+# --------------------------------------
+101  1001=100  1005=90
+
+
+# --------------------------------------
+# Straight Pipe: OD=100, LENGTH=300
+# --------------------------------------
+100  1001=100  1004=300
+
+
+# --------------------------------------
+# Elbow 45° (ELBW)
+# OD=100, ANGLE=45, CLR=150
+# --------------------------------------
+101  1001=100  1005=45  1006=150
+
+
+# --------------------------------------
+# Straight Pipe: OD=100, LENGTH=500
+# --------------------------------------
+100  1001=100  1004=500
