@@ -25,7 +25,7 @@ class Base2DSymbol:
     # --- helpers ---
     def get_cp_local(self, name: str) -> ConnectionPoint | None:
         for cp in self.connection_points_local():
-            if cp.name.lower() == name.lower():
+            if cp.name.lower() == name:
                 return cp
         return None
 

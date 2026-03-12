@@ -1,64 +1,52 @@
-from __future__ import annotations
-from typing import List, Tuple
-from .parser import parse_pipeline_file
+from .attribute_codes import COMPONENT_TYPES
 from ..symbols2d.pipe import StraightPipe2D, StraightPipe2DParams
-from ..symbols2d.elbow90 import Elbow90_2D, Elbow90Params
+from ..symbols2d.elbow import Elbow2D, ElbowParams
 from ..connect.engine import connect_parent_child
 
-def _make_symbol(item):
-    t = (item.get("type") or "").lower()
-    if t == "pipe":
-        return StraightPipe2D(StraightPipe2DParams(
-            od_mm=float(item.get("od", 100.0)),
-            length_mm=float(item.get("length", item.get("l", 500.0)))
-        ))
-    elif t == "elbow90":
-        return Elbow90_2D(Elbow90Params(
-            od_mm=float(item.get("od", 100.0)),
-            radius_mm=float(item.get("radius", item.get("r", 0))) or None
-        ))
-    else:
-        return None
 
-def generate_from_items(items: List[dict], plane="XY") -> Tuple[list, list]:
-    """
-    Chain symbols in given order (exact contact).
-    Parent starts at origin, angle 0.
-    """
+def make_symbol(item):
+    comp = int(item[1000])  # numeric type
+
+    if comp == COMPONENT_TYPES["PIPE"]:
+        return StraightPipe2D(StraightPipe2DParams(
+            od_mm=item.get(1001, 100.0),
+            length_mm=item.get(1004, 500.0)
+        ))
+
+    if comp == COMPONENT_TYPES["ELBOW"]:
+        return Elbow2D(ElbowParams(
+            od_mm=item.get(1001, 100.0),
+            angle_deg=item.get(1005, 90.0),
+            radius_mm=item.get(1006, None)
+        ))
+
+    # TODO: reducers, tees, valves...
+
+    return None
+
+
+def generate_from_items(items, plane="XY"):
     if not items:
         return [], []
 
-    symbols = [s for s in (_make_symbol(i) for i in items) if s is not None]
-    if not symbols:
-        return [], []
+    # Start with first component
+    parent = make_symbol(items[0])
+    prims, markers = parent.place_iso(plane, rot_deg=0.0, at=(0,0), add_markers=True)
 
-    # Start with first symbol
-    all_prims = []
-    all_markers = []
-
-    parent = symbols[0]
-    p_prims, p_markers = parent.place_iso(plane=plane, rot_deg=0.0, at=(0,0), add_markers=True)
-    all_prims.extend(p_prims)
-    all_markers.extend(p_markers)
-
-    # Chain the rest
+    # Chain next components
     current = parent
-    for child in symbols[1:]:
-        prims, markers = connect_parent_child(
-            current, child, plane=plane,
-            parent_angle=0.0, child_angle_extra=0.0, parent_at=(0,0)
-        )
-        # NOTE: current remains same "first" in this simple approach; for true chaining
-        # we should update "current" to the "composite" — for now we just accumulate.
-        all_prims.extend(prims[len(all_prims):] if prims else prims)  # naive append
-        all_markers.extend(markers)
 
-        # In a more advanced generator we would compute and pass forward the child's
-        # outlet as the next parent reference; left simple for this first pass.
+    for item in items[1:]:
+        child = make_symbol(item)
+        cp, cm = connect_parent_child(current, child, plane=plane)
+        prims.extend(cp)
+        markers.extend(cm)
         current = child
 
-    return all_prims, all_markers
+    return prims, markers
 
-def generate_from_file(path: str, plane="XY"):
+
+def generate_from_file(path, plane="XY"):
+    from .parser import parse_pipeline_file
     items = parse_pipeline_file(path)
     return generate_from_items(items, plane=plane)

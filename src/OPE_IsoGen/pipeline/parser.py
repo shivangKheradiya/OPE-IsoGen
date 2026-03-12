@@ -1,59 +1,46 @@
-from __future__ import annotations
-import json
-from typing import List, Dict
+# pipeline/parser.py
+from .attribute_codes import COMPONENT_TYPES, ATTR_CODES, SKEY
 
-"""
-Two simple formats supported:
+def parse_pipeline_file(path: str):
+    items = []
 
-1) TXT line-based:
-   PIPE, OD=100, L=500
-   ELBOW90, OD=100, R=150
-   PIPE, OD=100, L=300
-
-2) JSON array:
-   [
-     {"type":"pipe","od":100,"length":500},
-     {"type":"elbow90","od":100,"radius":150},
-     {"type":"pipe","od":100,"length":300}
-   ]
-"""
-
-def parse_pipeline_file(path: str) -> List[Dict]:
-    if path.lower().endswith(".json"):
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-
-    # TXT format
-    out = []
     with open(path, "r", encoding="utf-8") as f:
         for raw in f:
             line = raw.strip()
             if not line or line.startswith("#"):
                 continue
-            # Simple CSV-ish
-            parts = [p.strip() for p in line.split(",")]
-            if not parts: continue
-            kind = parts[0].upper()
-            item = {}
-            if kind == "PIPE":
-                item["type"] = "pipe"
-            elif kind == "ELBOW90":
-                item["type"] = "elbow90"
-            else:
+
+            # Split fields by whitespace
+            parts = line.split()
+            if len(parts) < 1:
                 continue
-            # key=value pairs
+
+            # First field must be numeric component code
+            try:
+                comp_code = int(parts[0])
+            except ValueError:
+                continue
+
+            entry = {1000: comp_code}               # TYPE
+            entry[1014] = SKEY.get(comp_code, "")   # SKEY auto
+
+            # Parse attributes like: 1001=100
             for seg in parts[1:]:
-                if "=" in seg:
-                    k,v = seg.split("=",1)
-                    k = k.strip().lower()
-                    v = v.strip()
-                    try:
-                        vnum = float(v)
-                        item[k] = vnum
-                    except ValueError:
-                        item[k] = v
-                else:
-                    # ignore
-                    pass
-            out.append(item)
-    return out
+                if "=" not in seg:
+                    continue
+                attr, val = seg.split("=", 1)
+                try:
+                    attr = int(attr)
+                except ValueError:
+                    continue
+
+                try:
+                    val = float(val)
+                except ValueError:
+                    pass  # store string later if needed
+
+                entry[attr] = val
+
+            items.append(entry)
+
+    return items

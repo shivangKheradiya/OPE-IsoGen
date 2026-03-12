@@ -1,5 +1,19 @@
-# Simple demo pipeline 
-# Element, Skey, Symbol Placement Datas: 1,2,3
-PIPE, OD=100, L=500
-ELBOW90, OD=100
-PIPE, OD=100, L=300
+# ===============================================================
+#  TEST: Two Elbows + Straight Pipe 
+#  Routing: North 500 → Up 2000 → North 500
+# ===============================================================
+
+# North 500 (PIPE)
+100   1001=100   1004=500
+
+# First elbow turning North → Up (90°)
+101   1001=100   1005=90
+
+# Up 2000 (PIPE)
+100   1001=100   1004=2000
+
+# Second elbow turning Up → North (90°)
+101   1001=100   1005=90
+
+# North 500 (PIPE)
+100   1001=100   1004=500

@@ -35,8 +35,8 @@ def connect_parent_child(parent: Base2DSymbol, child: Base2DSymbol,
 
     # 3) child inlet in local space
     c_in_local = _find_cp(child.connection_points_local(), "inlet")
-    if not c_in_local:
-        raise ValueError("Child has no 'inlet' CP")
+    if c_in_local is None:
+        raise ValueError(f"Child symbol {child.__class__.__name__} has CPs {child.connection_points_local()} but none named 'inlet'")
 
     # Direction alignment:
     # Parent outlet direction (local) = p_out_local.dir_deg, rotated by parent_angle.
