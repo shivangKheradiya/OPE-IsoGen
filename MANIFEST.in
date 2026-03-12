@@ -1,0 +1,4 @@
+include README.md
+include LICENSE
+recursive-include src/OPE_IsoGen *.py
+recursive-include examples *.txt *.py

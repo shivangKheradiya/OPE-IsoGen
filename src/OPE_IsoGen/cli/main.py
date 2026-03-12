@@ -1,108 +1,43 @@
-# src/OPE_IsoGen/cli/main.py
 import json
 import click
 
-# Internal imports kept local where appropriate to avoid circulars
-from OPE_IsoGen.config_loader import load_symbol_modules
-from OPE_IsoGen.symbols import get_symbol_class, StraightPipeParams
+from ..symbols2d.pipe import StraightPipe2D, StraightPipe2DParams
+from ..symbols2d.elbow90 import Elbow90_2D, Elbow90Params
+from ..exporters.svg2d import export_svg_2d
+from ..connect.engine import connect_parent_child
+from ..pipeline.generator import generate_from_file
 
-# 2D drawing pieces
-from OPE_IsoGen.exporters.svg2d import export_svg_2d
-from OPE_IsoGen.symbols2d.straight_pipe2d import StraightPipe2D, StraightPipe2DParams
-from OPE_IsoGen.symbols2d.elbow90_2d import Elbow90_2D, Elbow90Params
-from OPE_IsoGen.geometry2d.primitives import Marker2D
-
-# ----------------------------
-# Define CLI group FIRST
-# ----------------------------
 @click.group()
 def cli():
-    """OPE-IsoGen CLI main entry point."""
+    """OPE-IsoGen CLI"""
     pass
 
 
-# ----------------------------
-# Subcommand: run (3D placeholder + simple SVG preview used earlier)
-# ----------------------------
+# --- Single 2D symbol render ---
 @cli.command()
-@click.option("--config", type=str, help="Path to symbol configuration txt file.")
-@click.option("--operation", type=click.Choice(["dataload", "isogenerate", "dataprocess"]), default="isogenerate")
-@click.option("--outfile", type=str, required=True, help="Output file path.")
-@click.option("--symbol", type=str, default="dummy", help="Symbol name to render (e.g., dummy, straightpipe).")
-@click.option("--params", type=str, default="{}", help='JSON string with parameters for the symbol.')
-def run(config, operation, outfile, symbol, params):
-    """
-    Generates a basic SVG (temporary preview). OCC shape is created for real symbols, but 2D proj comes later.
-    """
-    print(f"[CLI] Operation = {operation}")
-    print(f"[CLI] Output = {outfile}")
-
-    if config:
-        print(f"[CLI] Loading config: {config}")
-        _ = load_symbol_modules(config)
-    else:
-        print("[CLI] No config provided. Using built-in symbols only.")
-
-    cls = get_symbol_class(symbol)
-    if not cls:
-        print(f"[CLI] Unknown symbol: {symbol}")
-        return
-
-    try:
-        p = json.loads(params or "{}")
-    except json.JSONDecodeError as e:
-        print(f"[CLI] Invalid params JSON: {e}")
-        return
-
-    if symbol.lower() == "straightpipe":
-        sp = StraightPipeParams(
-            od_mm=float(p.get("od_mm", 100.0)),
-            length_mm=float(p.get("length_mm", 500.0)),
-        )
-        sym = cls(sp)
-        # Build 3D shape (not yet used for true projection)
-        _shape3d = sym.build_shape_3d()
-        svg = sym.render_svg_preview()
-    else:
-        sym = cls()
-        svg = sym.render_svg()
-
-    with open(outfile, "w", encoding="utf-8") as f:
-        f.write(svg)
-
-    print("[CLI] SVG generated.")
-
-
-# ----------------------------
-# Subcommand: draw2d (new 2D symbol renderer with connection points)
-# ----------------------------
-@cli.command()
-@click.option("--symbol2d", type=click.Choice(["straightpipe2d", "elbow90_2d"]), required=True)
-@click.option("--params", type=str, default="{}", help='JSON string with parameters.')
-@click.option("--plane", type=click.Choice(["XY", "YZ", "ZX"]), default="XY")
-@click.option("--angle", type=float, default=0.0, help="Additional rotation angle in degrees.")
-@click.option("--at", type=str, default="0,0", help="Placement origin 'x,y' in mm.")
+@click.option("--symbol2d", type=click.Choice(["straightpipe", "elbow90"]), required=True)
+@click.option("--params", type=str, default="{}", help='JSON params (e.g. {"od_mm":100,"length_mm":500})')
+@click.option("--plane", type=click.Choice(["XY","YZ","ZX"]), default="XY")
+@click.option("--angle", type=float, default=0.0, help="In-plane rotation in degrees")
+@click.option("--at", type=str, default="0,0", help="Origin 'x,y' in mm")
 @click.option("--outfile", type=str, required=True)
 def draw2d(symbol2d, params, plane, angle, at, outfile):
-    """
-    Render a 2D symbol to SVG with connection points visible (for testing).
-    """
+    """Render a single 2D symbol with connection markers."""
     try:
         p = json.loads(params or "{}")
     except json.JSONDecodeError as e:
-        print(f"[CLI] Invalid params JSON: {e}")
-        return
-    try:
-        x_str, y_str = (at or "0,0").split(",")
-        at_xy = (float(x_str), float(y_str))
-    except Exception:
-        print("[CLI] Invalid --at format. Use 'x,y'")
-        return
+        raise click.ClickException(f"Invalid JSON: {e}")
 
-    if symbol2d == "straightpipe2d":
+    try:
+        ax, ay = (at or "0,0").split(",")
+        at_xy = (float(ax), float(ay))
+    except Exception:
+        raise click.ClickException("Invalid --at, expected 'x,y'")
+
+    if symbol2d == "straightpipe":
         sp = StraightPipe2DParams(
             od_mm=float(p.get("od_mm", 100.0)),
-            length_mm=float(p.get("length_mm", 500.0)),
+            length_mm=float(p.get("length_mm", 500.0))
         )
         sym = StraightPipe2D(sp)
     else:
@@ -112,13 +47,67 @@ def draw2d(symbol2d, params, plane, angle, at, outfile):
         )
         sym = Elbow90_2D(ep)
 
-    prims, cps = sym.place(plane=plane, rotation_deg=angle, at=at_xy)
-
-    # connection point markers (transformed)
-    markers = [Marker2D(cp.x, cp.y, label=cp.name) for cp in cps]
-
+    prims, markers = sym.place_iso(plane=plane, rot_deg=angle, at=at_xy, add_markers=True)
     export_svg_2d(prims, markers, outfile)
-    print("[CLI] 2D SVG generated:", outfile)
+    click.echo(f"[OK] Wrote {outfile}")
+
+
+# --- Connect two symbols and render ---
+@cli.command()
+@click.option("--parent", type=click.Choice(["straightpipe", "elbow90"]), required=True)
+@click.option("--child", type=click.Choice(["straightpipe", "elbow90"]), required=True)
+@click.option("--parent-params", type=str, default="{}")
+@click.option("--child-params", type=str, default="{}")
+@click.option("--plane", type=click.Choice(["XY","YZ","ZX"]), default="XY")
+@click.option("--parent-angle", type=float, default=0.0)
+@click.option("--child-angle", type=float, default=0.0)
+@click.option("--parent-at", type=str, default="0,0")
+@click.option("--outfile", type=str, required=True)
+def connect2d(parent, child, parent_params, child_params, plane, parent_angle, child_angle, parent_at, outfile):
+    """Place child so its inlet matches parent's outlet. Render both."""
+    def mk_symbol(kind: str, js: str):
+        cfg = json.loads(js or "{}")
+        if kind == "straightpipe":
+            return StraightPipe2D(StraightPipe2DParams(
+                od_mm=float(cfg.get("od_mm", 100.0)),
+                length_mm=float(cfg.get("length_mm", 500.0))
+            ))
+        else:
+            return Elbow90_2D(Elbow90Params(
+                od_mm=float(cfg.get("od_mm", 100.0)),
+                radius_mm=float(cfg.get("radius_mm", 0)) or None
+            ))
+
+    try:
+        x,y = (parent_at or "0,0").split(",")
+        parent_at_xy = (float(x), float(y))
+    except Exception:
+        raise click.ClickException("Invalid --parent-at, expected 'x,y'")
+
+    parent_sym = mk_symbol(parent, parent_params)
+    child_sym  = mk_symbol(child,  child_params)
+
+    prims, markers = connect_parent_child(
+        parent_sym, child_sym,
+        plane=plane,
+        parent_angle=parent_angle,
+        child_angle_extra=child_angle,
+        parent_at=parent_at_xy
+    )
+    export_svg_2d(prims, markers, outfile)
+    click.echo(f"[OK] Wrote {outfile}")
+
+
+# --- Generate from pipeline file ---
+@cli.command()
+@click.option("--file", "file_path", type=str, required=True, help="Path to Pipe Data File (txt/json)")
+@click.option("--plane", type=click.Choice(["XY","YZ","ZX"]), default="XY")
+@click.option("--outfile", type=str, required=True)
+def generate2d(file_path, plane, outfile):
+    """Parse pipeline file and generate an isometric SVG."""
+    prims, markers = generate_from_file(file_path, plane=plane)
+    export_svg_2d(prims, markers, outfile)
+    click.echo(f"[OK] Generated {outfile} from {file_path}")
 
 
 if __name__ == "__main__":

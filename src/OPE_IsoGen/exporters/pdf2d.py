@@ -1,0 +1,3 @@
+# Placeholder for a future ReportLab-based PDF 2D exporter.
+# from reportlab.pdfgen import canvas
+# ...

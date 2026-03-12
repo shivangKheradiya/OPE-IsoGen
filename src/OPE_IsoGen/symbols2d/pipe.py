@@ -11,23 +11,21 @@ class StraightPipe2DParams:
 
 class StraightPipe2D(Base2DSymbol):
     """
-    Centerline representation along +X direction.
-    Connection points:
-      - inlet  at (0, 0), dir 0°
-      - outlet at (L, 0), dir 0°
+    Centerline along +X in local space.
+    CPs:
+      - inlet  at (0,0) dir 0°
+      - outlet at (L,0) dir 0°
     """
-
     def __init__(self, p: StraightPipe2DParams | None = None):
         self.p = p or StraightPipe2DParams()
 
     def geometry_local(self) -> List:
-        # Centerline from (0,0) to (L,0)
         L = self.p.length_mm
         return [Line2D(0, 0, L, 0, layer="centerline")]
 
     def connection_points_local(self):
         L = self.p.length_mm
         return [
-            ConnectionPoint("inlet", 0.0, 0.0, dir_deg=0.0, kind="inlet"),
-            ConnectionPoint("outlet", L,   0.0, dir_deg=0.0, kind="outlet"),
+            ConnectionPoint("inlet",  0.0, 0.0, 0.0, "inlet"),
+            ConnectionPoint("outlet", L,   0.0, 0.0, "outlet"),
         ]
