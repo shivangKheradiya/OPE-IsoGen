@@ -6,7 +6,7 @@ from ..symbols2d.pipe import StraightPipe2D, StraightPipe2DParams
 from ..symbols2d.elbow import Elbow2D, ElbowParams
 from ..exporters.svg2d import export_svg_2d
 from ..connect.engine import connect_parent_child
-
+from ..utils.debug_flags import *
 
 @click.group()
 def cli():
@@ -98,8 +98,12 @@ def connect2d(parent, child, parent_params, child_params, plane, outfile):
 @click.option("--file", "file_path", required=True)
 @click.option("--plane", type=click.Choice(["XY","YZ","ZX"]), default="XY")
 @click.option("--outfile", type=str, required=True)
-def generate2d(file_path, plane, outfile):
+@click.option("--debug-coords", is_flag=True, help="Show 3D coordinate points in the output.")
+@click.option("--debug-tangents", is_flag=True, help="Show elbow tangent points.")
+def generate2d(file_path, plane, outfile, debug_coords, debug_tangents):
     """Generate a complete 2D isometric from a pipeline.txt file."""
+    debug.SHOW_COORDINATES = debug_coords
+    debug.SHOW_TANGENT_POINTS = debug_tangents
     prims, markers = generate_from_file(file_path, plane=plane)
     export_svg_2d(prims, markers, outfile)
     click.echo(f"[OK] Generated {outfile}")

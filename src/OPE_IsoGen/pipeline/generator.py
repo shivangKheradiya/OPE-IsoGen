@@ -9,6 +9,9 @@ from ..geometry3d.vectors import (
 from ..geometry3d.projection import *
 from ..geometry2d.primitives import *
 
+from ..utils.debug_flags import debug
+from ..utils.debug_render import render_coordinate_marker
+
 # Numeric keys for convenience
 TYPE     = 1000
 OD       = 1001
@@ -130,6 +133,13 @@ def generate_from_items(items: List[Dict], plane="XY"):
             px, py = project_point_only(E)
             markers.append(Marker2D(px, py, "E"))
 
+            if debug.SHOW_COORDINATES:
+                # Markers for start & end
+                ms = render_coordinate_marker(S, label="S")
+                me = render_coordinate_marker(E, label="E")
+                if ms: markers.append(ms)
+                if me: markers.append(me)
+
 
         elif comp == COMPONENT_TYPES["ELBOW"]:
             if not _has_coords(it):
@@ -141,6 +151,17 @@ def generate_from_items(items: List[Dict], plane="XY"):
             S = _p(it, START_X, START_Y, START_Z)
             E = _p(it, END_X, END_Y, END_Z)
             prims  # keep
+
+            if debug.SHOW_COORDINATES:
+                ms = render_coordinate_marker(S, label="ELBOW_S")
+                me = render_coordinate_marker(E, label="ELBOW_E")
+                if ms: markers.append(ms)
+                if me: markers.append(me)
+                
+            if debug.SHOW_TANGENT_POINTS:
+                for idx, p in enumerate(arc_pts_3d):
+                    m = render_coordinate_marker(p, label=f"A{idx}")
+                    if m: markers.append(m)
         else:
             # other components later
             pass
