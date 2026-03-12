@@ -126,3 +126,31 @@ CAD_EXPORT_CODES = {
     "COLOR": 3001,           # CAD color index
     "LINESTYLE": 3002,       # CAD linestyle
 }
+
+# ----------------------------------------------------------
+# OPE-ISOGEN CUSTOM INTERNAL ATTRIBUTE RANGE (10001+)
+# ----------------------------------------------------------
+# These allow you to pass absolute 3D coordinates per component.
+# The generator will prefer these if present (coordinate-driven mode).
+# If absent, it can fall back to routing-based inference (later).
+#
+# Convention (absolute, global plant coordinates):
+#   X = East (+),  Y = North (+),  Z = Up (+)
+#   Units: millimetres (mm)
+# ----------------------------------------------------------
+
+OPE_ISOGEN_CODES = {
+    # Optional "component anchor" (Node-0). Useful for printing node coordinates.
+    "COMP_X":   10001,   # Component's reference X (optional)
+    "COMP_Y":   10002,   # Component's reference Y (optional)
+    "COMP_Z":   10003,   # Component's reference Z (optional)
+
+    # Start and End points of THIS component (centerline)
+    "START_X":  10004,   # Start point X (absolute)
+    "START_Y":  10005,   # Start point Y (absolute)
+    "START_Z":  10006,   # Start point Z (absolute)
+
+    "END_X":    10007,   # End point X (absolute)
+    "END_Y":    10008,   # End point Y (absolute)
+    "END_Z":    10009,   # End point Z (absolute)
+}

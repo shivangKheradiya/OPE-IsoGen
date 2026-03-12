@@ -16,3 +16,5 @@ opeisogen draw2d --symbol2d straightpipe2d --outfile sp_xy.svg
 opeisogen draw2d --symbol2d elbow90_2d --outfile elbow_default.svg
 
 opeisogen generate2d --file examples/simple_pipeline.txt --plane ZX --outfile out_iso_zx.svg
+
+opeisogen generate2d --file examples/simple_pipeline.txt --outfile iso_coord.svg
