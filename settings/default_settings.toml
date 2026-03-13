@@ -1,0 +1,35 @@
+# Settings for OPE-IsoGen (fresh branch)
+
+[project]
+name = "OPE-IsoGen"
+units = "mm"                  # mm or inch
+strict_mode = true            # if true, fail fast on invalid inputs
+
+[io]
+output_dir = "out"            # default output directory
+svg_chord_mm = 20.0           # sampling step for SVG polylines from OCCT
+overwrite = true              # overwrite existing files
+
+[isometric]
+# Standard 30° isometric projection factors (do not change unless you need a custom view)
+xy_scale = 1.0
+z_scale = 1.0                 # you may tune Z if you need non-uniform scaling
+deg30_cos = 0.866025403784    # cos(30°)
+deg30_sin = 0.5               # sin(30°)
+# formula used in projector:
+# sx = +deg30_cos*x - deg30_cos*y
+# sy = +deg30_sin*x + deg30_sin*y - z_scale*z
+
+[export.step]
+enabled = true
+filename = "pipeline.step"
+
+[export.svg]
+enabled = true
+filename = "pipeline.svg"
+stroke_width = 2
+padding = 20
+
+[debug]
+log_level = "info"            # debug | info | warn | error
+print_bounds = false

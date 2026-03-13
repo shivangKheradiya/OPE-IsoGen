@@ -6,7 +6,9 @@ from OCC.Core.IFSelect import IFSelect_RetDone
 from OCC.Core.TopExp import TopExp_Explorer
 from OCC.Core.TopAbs import TopAbs_EDGE
 from OCC.Core.BRepAdaptor import BRepAdaptor_Curve
+from .projector import iso_project_point
 
+ISO = True
 
 def export_step(shape, path):
     wr = STEPControl_Writer()
@@ -30,16 +32,27 @@ def export_svg(shape, path):
         p1 = crv.Value(crv.FirstParameter())
         p2 = crv.Value(crv.LastParameter())
 
-        x1, y1 = p1.X(), p1.Y()
-        x2, y2 = p2.X(), p2.Y()
+        if ISO:
+            # for Isometric projections
+            sx1, sy1 = iso_project_point(p1.X(), p1.Y(), p1.Z())
+            sx2, sy2 = iso_project_point(p2.X(), p2.Y(), p2.Z())
+            xs += [sx1, sx2]
+            ys += [sy1, sy2]
 
-        xs += [x1,x2]
-        ys += [y1,y2]
+            lines.append(((sx1,sy1),(sx2,sy2)))
+        else:
+            # for orthographic projections
+            x1, y1 = p1.X(), p1.Y()
+            x2, y2 = p2.X(), p2.Y()
+            xs += [x1,x2]
+            ys += [y1,y2]
 
-        lines.append(((x1,y1),(x2,y2)))
+            lines.append(((x1,y1),(x2,y2)))
+
         exp.Next()
 
     if not xs:
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
         with open(path,"w") as f:
             f.write("<svg/>")
         return
