@@ -4,6 +4,7 @@
 name = "OPE-IsoGen"
 units = "mm"                  # mm or inch
 strict_mode = true            # if true, fail fast on invalid inputs
+projection = "ISO"            # ISO or ORTHO
 
 [io]
 output_dir = "out"            # default output directory

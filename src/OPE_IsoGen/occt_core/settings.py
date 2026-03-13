@@ -12,6 +12,7 @@ class ProjectSettings:
     name: str = "OPE-IsoGen"
     units: str = "mm"
     strict_mode: bool = True
+    projection: str = "ISO"
 
 @dataclass
 class IOSettings:

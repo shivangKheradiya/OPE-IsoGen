@@ -3,7 +3,7 @@
 import click, os
 from ..pipeline.parser import parse_pipeline_file
 from ..occt_core.builder import build_pipeline_shape
-from ..occt_core.exporters import export_step, export_svg
+from ..occt_core.exporters import export_step
 from ..occt_core.settings import load_settings
 
 @click.group()
@@ -19,7 +19,7 @@ def cli():
 def export_cad(file_path, outdir, settings_path):
     s = load_settings(settings_path)
     items = parse_pipeline_file(file_path)
-    shape = build_pipeline_shape(items)
+    shape = build_pipeline_shape(items, s.project.projection)
     os.makedirs(outdir, exist_ok=True)
     if s.export.step.enabled:
         export_step(shape, os.path.join(outdir or s.io.output_dir, s.export.step.filename))
