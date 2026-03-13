@@ -1,0 +1,11 @@
+name: opeisogen-dev
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - click
+  - pythonocc-core
+  - freetype
+  - pip:
+      - svgelements
