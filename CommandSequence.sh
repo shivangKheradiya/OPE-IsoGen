@@ -7,3 +7,10 @@ pip install -e .
 
 opeisogen export-cad --file examples/simple_pipeline.txt
 opeisogen export-cad --file examples/simple_pipeline.txt --settings settings/default_settings.toml
+
+conda activate opeisogen-dev
+
+# 1) 3D CAD export (STEP)
+set PYTHONPATH=src 
+python -m OPE_IsoGen.cli.main export-cad --file examples/simple_pipeline.txt --settings settings/default_settings.toml
+

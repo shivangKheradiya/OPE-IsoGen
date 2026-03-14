@@ -1,0 +1,3 @@
+- Setup OCCT such that it will create iso and ortho of any Geometry.
+ - For iso it shoud be any any plane based on input
+ - ortho should be realistic
