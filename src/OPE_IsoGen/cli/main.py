@@ -38,12 +38,11 @@ def export_geometry_test(mode, outdir):
     # import test module directly (no install required)
     repo = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     sys.path.insert(0, repo)  # ensure src is visible to the test script
-    from tests.run_geometry_smoke import run_iso, run_ortho, run_iso_step
+    from tests.run_geometry_smoke import run_ortho, run_iso_step
 
     if mode in ("ORTHO","BOTH"):
         run_ortho(outdir)
     if mode in ("ISO","BOTH"):
-        run_iso(outdir)
         run_iso_step(outdir)
 
     click.echo(f"[DONE] test-geometry ({mode})")
