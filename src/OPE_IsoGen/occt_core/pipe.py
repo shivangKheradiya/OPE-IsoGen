@@ -2,8 +2,7 @@
 
 from OCC.Core.gp import gp_Pnt, gp_XYZ, gp_Trsf2d
 from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_MakeEdge
-from .projector import *
-import click
+from ..Geometry.Iso.projector_top import *
 
 def build_pipe_edge(S, E, Projection: str):
     # If S and E are actually tuples, convert them to gp_Pnt first

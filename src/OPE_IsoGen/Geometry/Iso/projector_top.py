@@ -1,4 +1,4 @@
-# src/OPE_IsoGen/occt_core/projector.py
+from __future__ import annotations
 import math
 
 SQ3_2 = math.sqrt(3)/2.0
