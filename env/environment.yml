@@ -9,3 +9,4 @@ dependencies:
   - freetype
   - pip:
       - svgelements
+      - ezdxf
