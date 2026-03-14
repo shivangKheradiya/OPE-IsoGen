@@ -11,7 +11,7 @@ def as_vec(v: Pt3 | gp_Vec) -> gp_Vec:
     return v if isinstance(v, gp_Vec) else gp_Vec(float(v[0]), float(v[1]), float(v[2]))
 
 def unit_vec(v: gp_Vec, tol: float = 1e-12) -> gp_Vec:
-    g = gp_Vec(v)
+    g = gp_Vec(v.X(), v.Y(), v.Z())
     if g.Magnitude() < tol:  # fallback up
         return gp_Vec(0, 0, 1)
     g.Normalize()
@@ -21,12 +21,15 @@ def plane_ax2(C: Pt3 | gp_Pnt, n: Pt3 | gp_Vec, xdir_hint: Optional[Pt3 | gp_Vec
     """Robust gp_Ax2(center, normal, XDir) in the circle plane."""
     C_p = as_pnt(C)
     n_v = unit_vec(as_vec(n))
-    if xdir_hint is None:
-        ref = gp_Vec(1, 0, 0) if abs(n_v.X()) < 0.9 else gp_Vec(0, 1, 0)
-    else:
-        ref = as_vec(xdir_hint)
-        if ref.Magnitude() == 0: ref = gp_Vec(1, 0, 0)
-    # project ref into plane to get XDir
-    xdir = ref - gp_Vec(n_v).Multiplied(ref.Dot(n_v))
-    xdir = unit_vec(xdir) if xdir.Magnitude() > 0 else gp_Vec(0, 1, 0)
-    return gp_Ax2(C_p, gp_Dir(n_v), gp_Dir(xdir))
+    ref = gp_Vec(1,0,0) if abs(n_v.X()) < 0.9 else gp_Vec(0,1,0)
+
+    # project ref into the plane: xdir = ref - (ref·n_v) * n_v
+    dot = ref.Dot(n_v)
+    xdir = gp_Vec(ref.X() - dot * n_v.X(),
+                  ref.Y() - dot * n_v.Y(),
+                  ref.Z() - dot * n_v.Z())
+
+    if xdir.Magnitude() < 1e-12:
+        xdir = gp_Vec(0, 1, 0)
+    xdir.Normalize()
+    return gp_Ax2(as_pnt(C), gp_Dir(n_v), gp_Dir(xdir))

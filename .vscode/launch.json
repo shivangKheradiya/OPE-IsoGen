@@ -17,6 +17,21 @@
                 "settings/default_settings.toml"
             ],
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "export-geometry-test",
+            "type": "python",
+            "request": "launch",
+            "module": "OPE_IsoGen.cli.main",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            },
+            "args": [
+                "export-geometry-test",
+                "--mode", "BOTH" ,
+                "--outdir", "out/tests"
+            ],
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
