@@ -11,6 +11,9 @@ from ..Contracts.bspline_spec import BSplineSpec
 from ..Contracts.parabola_spec import ParabolaSpec
 from ..Contracts.hyperbola_spec import HyperbolaSpec
 from .circle_iso import _basis_from_normal, _nseg_for_chord_tol
+from OPE_IsoGen.Geometry.Contracts.text_spec import TextSpec
+from OPE_IsoGen.Geometry.Iso.projector_top import iso_project_point
+from OPE_IsoGen.Geometry.Iso.text_orientation import ISOTextOrientation
 
 def _write_svg_polylines(polylines: List[List[Tuple[float,float]]],
                          lines: List[Tuple[Tuple[float,float],Tuple[float,float]]],
@@ -178,3 +181,78 @@ def iso_svg_from_hyperbola(spec: HyperbolaSpec, path: str, segments: int = 96,
         pz = cz + x*U[2] + y*V[2]
         pts.append(iso_project_point(px,py,pz))
     _write_svg_polylines([pts], [], path, stroke_width, padding)
+
+def iso_svg_from_text(
+    spec: TextSpec,
+    path: str,
+    stroke_width: int = 2,
+    padding: float = 20.0
+):
+    import math
+
+    # Local helpers exactly like all other iso_svg_* functions:
+    def _unit3(v):
+        L = math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]) or 1.0
+        return (v[0]/L, v[1]/L, v[2]/L)
+
+    def _cross(a, b):
+        return (
+            a[1]*b[2] - a[2]*b[1],
+            a[2]*b[0] - a[0]*b[2],
+            a[0]*b[1] - a[1]*b[0]
+        )
+
+    # 1) Build text plane basis (U,V) exactly like hyperbola
+    U = _unit3(spec.xdir)
+    V = _unit3(_cross(spec.n, U))
+
+    # 2) Project anchor point C into ISO space
+    sx, sy = iso_project_point(*spec.C)
+
+    # 3) Compute snapped ISO angle using your ISO orientation class
+    from OPE_IsoGen.Geometry.Iso.text_orientation import ISOTextOrientation
+    angle = ISOTextOrientation.angle_deg(spec.C, spec.xdir, spec.rot_deg)
+    angle_svg = -angle   # SVG rotates opposite direction
+
+    # 4) Determine horizontal anchor for SVG
+    anchor = {
+        "LEFT": "start",
+        "CENTER": "middle",
+        "RIGHT": "end",
+    }.get(spec.halign.upper(), "start")
+
+    # 5) Build auto-fit bounding box (same as hyperbola path)
+    minx = sx - padding
+    maxx = sx + padding
+    miny = sy - padding
+    maxy = sy + padding
+
+    W = maxx - minx
+    H = maxy - miny
+
+    def tx(x): return x - minx
+    def ty(y): return H - (y - miny)
+
+    # 6) Output SVG
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(
+            f'<svg xmlns="http://www.w3.org/2000/svg" '
+            f'width="{W}mm" height="{H}mm" '
+            f'viewBox="0 0 {W} {H}">\n'
+        )
+        f.write('<g fill="black" stroke="none">\n')
+
+        # ONE text element — this is analogous to ONE polyline in hyperbola
+        f.write(
+            f'<text x="{tx(sx):.3f}" y="{ty(sy):.3f}" '
+            f'font-size="{spec.height_mm}mm" '
+            f'text-anchor="{anchor}" '
+            f'transform="rotate({angle_svg:.3f},{tx(sx):.3f},{ty(sy):.3f})" '
+            f'dominant-baseline="alphabetic">'
+            f'{spec.text}'
+            f'</text>\n'
+        )
+
+        f.write('</g></svg>\n')

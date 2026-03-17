@@ -14,7 +14,9 @@ from OPE_IsoGen.Geometry.Contracts.ellipse_spec import EllipseSpec, EllipticArcS
 from OPE_IsoGen.Geometry.Contracts.bspline_spec import BSplineSpec
 from OPE_IsoGen.Geometry.Contracts.parabola_spec import ParabolaSpec
 from OPE_IsoGen.Geometry.Contracts.hyperbola_spec import HyperbolaSpec
-
+from OPE_IsoGen.Geometry.Contracts.text_spec import TextSpec
+from OPE_IsoGen.Geometry.Iso.iso_svg_builder import iso_svg_from_text
+from OPE_IsoGen.Geometry.Iso.text_orientation import ISOTextOrientation
 # ---- ORTHO (3D) builders ----
 from OPE_IsoGen.Geometry.Primitives3D.line3d import make_line
 from OPE_IsoGen.Geometry.Primitives3D.circle3d import make_circle_center_normal_radius
@@ -22,6 +24,7 @@ from OPE_IsoGen.Geometry.Primitives3D.arc3d import make_arc_center_normal_radius
 from OPE_IsoGen.Geometry.Primitives3D.ellipse3d import make_ellipse, make_elliptic_arc
 from OPE_IsoGen.Geometry.Primitives3D.bspline3d import make_bspline
 from OPE_IsoGen.Geometry.Primitives3D.conics3d import make_parabola, make_hyperbola
+from OPE_IsoGen.Geometry.Primitives3D.text3d import text3d_to_dxf
 
 # ---- ISO (Z=0 STEP) builders — POLYLINE ONLY ----
 from OPE_IsoGen.Geometry.Iso.iso_step_builder import (
@@ -393,10 +396,211 @@ def run_iso_svg(outdir="out/tests_svg"):
 
     print("[OK] ISO SVG (polyline) written to", outdir)
 
+def run_text3d_dxf(outdir="out/tests_text3d_dxf"):
+    os.makedirs(outdir, exist_ok=True)
+
+    tests = [
+
+        # ---------------------------------------------------------
+        # TEXT IN STANDARD AXIS-ALIGNED PLANES AND DIRECTIONS
+        # ---------------------------------------------------------
+
+        ("text3d_xy_horizontal",
+         TextSpec(
+             C=(0, 0, 0),
+             n=(0, 0, 1),          # XY plane
+             xdir=(1, 0, 0),       # +X direction
+             text="XY-HORIZONTAL",
+             height_mm=10.0,
+             rot_deg=0,
+             halign="LEFT"
+         )),
+
+        ("text3d_xy_vertical",
+         TextSpec(
+             C=(200, 0, 0),
+             n=(0, 0, 1),          # XY plane
+             xdir=(0, 1, 0),       # +Y direction
+             text="XY-VERTICAL",
+             height_mm=10.0,
+             rot_deg=0,
+             halign="LEFT"
+         )),
+
+        # ---------------------------------------------------------
+        # TEXT IN YZ PLANE (vertical wall) — normal = +X
+        # ---------------------------------------------------------
+        ("text3d_yz_upwards",
+         TextSpec(
+             C=(0, 300, 0),
+             n=(1, 0, 0),          # normal: +X   → plane: YZ
+             xdir=(0, 1, 0),       # baseline along +Y
+             text="YZ-UP",
+             height_mm=10.0,
+             rot_deg=0,
+             halign="LEFT"
+         )),
+
+        ("text3d_yz_forward",
+         TextSpec(
+             C=(0, 600, 0),
+             n=(1, 0, 0),          # plane = YZ
+             xdir=(0, 0, 1),       # baseline along +Z
+             text="YZ-FORWARD",
+             height_mm=10.0,
+             rot_deg=0,
+             halign="LEFT"
+         )),
+
+        # ---------------------------------------------------------
+        # TEXT IN ZX PLANE — normal = +Y
+        # ---------------------------------------------------------
+        ("text3d_zx",
+         TextSpec(
+             C=(0, 0, 300),
+             n=(0, 1, 0),          # plane = ZX
+             xdir=(1, 0, 0),       # baseline along +X
+             text="ZX-PLANE",
+             height_mm=10.0,
+             rot_deg=0,
+             halign="LEFT"
+         )),
+
+        # ---------------------------------------------------------
+        # DIAGONAL TEXT — EXACTLY WHAT YOU REQUESTED
+        # xdir = (1,1,1) should show diagonal orientation in 3D
+        # ---------------------------------------------------------
+        ("text3d_diagonal_xyz",
+         TextSpec(
+             C=(200, 200, 200),
+             n=(0, 0, 1),          # plane = XY, but baseline is diagonal in 3D XY
+             xdir=(1, 1, 1),       # DIAGONAL — should produce ~45° in XY
+             text="DIAGONAL XDIR",
+             height_mm=12.0,
+             rot_deg=0,
+             halign="LEFT"
+         )),
+
+        # ---------------------------------------------------------
+        # DIAGONAL ON A SLANTED PLANE
+        # n = (1,1,0) slanted plane
+        # xdir = (1,0,1)
+        # ---------------------------------------------------------
+        ("text3d_slanted_plane",
+         TextSpec(
+             C=(400, 100, 200),
+             n=(1, 1, 0),          # slanted plane normal
+             xdir=(1, 0, 1),       # runs diagonally across slanted plane
+             text="SLANTED PLANE",
+             height_mm=12.0,
+             rot_deg=20,
+             halign="CENTER"
+         )),
+
+        # ---------------------------------------------------------
+        # EXTRA ROTATION TEST (rotation around plane normal)
+        # ---------------------------------------------------------
+        ("text3d_rotated",
+         TextSpec(
+             C=(600, 0, 0),
+             n=(0, 0, 1),
+             xdir=(1, 1, 0),       # 45° baseline
+             text="ROTATED+NORMAL",
+             height_mm=12.0,
+             rot_deg=30,           # extra 30° around normal
+             halign="LEFT"
+         )),
+    ]
+
+    for name, spec in tests:
+        outfile = os.path.join(outdir, f"{name}.dxf")
+        text3d_to_dxf(spec, outfile)
+        print(f"   [OK] {outfile}")
+
+    print(f"[OK] TEXT3D → DXF smoke test finished: {outdir}")
+
+def run_iso_svg_text(outdir="out/tests_iso_svg_text"):
+    os.makedirs(outdir, exist_ok=True)
+
+    # ---------- ISO TEXT SMOKE CASES ----------
+    tests = [
+
+        # simple horizontal text in XY plane
+        ("iso_text_x", TextSpec(
+            C=(0, 0, 0),
+            n=(0, 0, 1),
+            xdir=(1, 0, 0),
+            text="ISO TEXT X",
+            height_mm=6.0,
+            rot_deg=0,
+            halign="LEFT"
+        )),
+
+        # text with baseline in +Y
+        ("iso_text_y", TextSpec(
+            C=(200, 0, 0),
+            n=(0, 0, 1),
+            xdir=(0, 1, 0),
+            text="ISO TEXT Y",
+            height_mm=6.0,
+            rot_deg=0,
+            halign="LEFT"
+        )),
+
+        # 3D diagonal baseline vector
+        ("iso_text_diag3d", TextSpec(
+            C=(300, 300, 200),
+            n=(0, 0, 1),
+            xdir=(1, 1, 1),
+            text="DIAGONAL 3D",
+            height_mm=7.0,
+            rot_deg=0,
+            halign="CENTER"
+        )),
+
+        # 3D baseline but with extra rotation
+        ("iso_text_diag_rot30", TextSpec(
+            C=(500, 200, 150),
+            n=(0, 0, 1),
+            xdir=(1, 1, 0),
+            text="ROTATED +30",
+            height_mm=7.0,
+            rot_deg=30,
+            halign="RIGHT"
+        )),
+
+        # slanted plane
+        ("iso_text_slanted", TextSpec(
+            C=(100, 400, 200),
+            n=(1, 1, 1),
+            xdir=(1, 0, 1),
+            text="SLANTED PLANE",
+            height_mm=7.0,
+            rot_deg=0,
+            halign="LEFT"
+        )),
+    ]
+
+    print("\n=== ISO SVG TEXT SMOKE TEST ===")
+
+    for name, spec in tests:
+        # compute ISO rotation angle (snapped to 30°, -30°, 90°, -90°)
+        angle = ISOTextOrientation.angle_deg(spec.C, spec.xdir, spec.rot_deg)
+        print(f"{name}: ISO snapped angle = {angle:.1f}°")
+
+        # export SVG file
+        outfile = os.path.join(outdir, f"{name}.svg")
+        iso_svg_from_text(spec, outfile)
+
+    print(f"[OK] ISO SVG text written to: {outdir}")
+    print("=== END ISO SVG TEXT SMOKE TEST ===\n")
+
 def run_iso(outdir: str = "out/tests") -> None:
     run_iso_step(outdir)
     run_iso_dxf(outdir)
     run_iso_svg(outdir)
+    run_text3d_dxf(outdir)
+    run_iso_svg_text(outdir)
 
 if __name__ == "__main__":
     # Default: run both
