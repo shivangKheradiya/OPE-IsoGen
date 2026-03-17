@@ -17,6 +17,7 @@ from OPE_IsoGen.Geometry.Contracts.hyperbola_spec import HyperbolaSpec
 from OPE_IsoGen.Geometry.Contracts.text_spec import TextSpec
 from OPE_IsoGen.Geometry.Iso.iso_svg_builder import iso_svg_from_text
 from OPE_IsoGen.Geometry.Iso.text_orientation import ISOTextOrientation
+from OPE_IsoGen.Geometry.Contracts.dimension_spec import DimensionSpec
 # ---- ORTHO (3D) builders ----
 from OPE_IsoGen.Geometry.Primitives3D.line3d import make_line
 from OPE_IsoGen.Geometry.Primitives3D.circle3d import make_circle_center_normal_radius
@@ -25,6 +26,7 @@ from OPE_IsoGen.Geometry.Primitives3D.ellipse3d import make_ellipse, make_ellipt
 from OPE_IsoGen.Geometry.Primitives3D.bspline3d import make_bspline
 from OPE_IsoGen.Geometry.Primitives3D.conics3d import make_parabola, make_hyperbola
 from OPE_IsoGen.Geometry.Primitives3D.text3d import text3d_to_dxf
+from OPE_IsoGen.Geometry.Primitives3D.dimension3d import dimension3d_to_dxf
 
 # ---- ISO (Z=0 STEP) builders — POLYLINE ONLY ----
 from OPE_IsoGen.Geometry.Iso.iso_step_builder import (
@@ -595,7 +597,42 @@ def run_iso_svg_text(outdir="out/tests_iso_svg_text"):
     print(f"[OK] ISO SVG text written to: {outdir}")
     print("=== END ISO SVG TEXT SMOKE TEST ===\n")
 
+def run_dimension3d_dxf(outdir="out/tests_dimension3d_dxf"):
+    os.makedirs(outdir, exist_ok=True)
+
+    dims = [
+
+        # XY plane horizontal dimension
+        ("dim_xy", DimensionSpec(
+            P1=(0,0,0), P2=(200,0,0), C=(0,50,0),
+            n=(0,0,1), xdir=(1,0,0),
+            text=None, height_mm=5.0,
+            arrow_style="TICK", text_position="CENTER", auto_text=True,
+            layer="DIM"
+        )),
+
+        # YZ plane vertical dimension
+        ("dim_yz", DimensionSpec(
+            P1=(0,0,0), P2=(0,200,0), C=(50,0,0),
+            n=(1,0,0), xdir=(0,1,0),
+            auto_text=True, arrow_style="OPEN"
+        )),
+
+        # Diagonal in 3D plane
+        ("dim_diag", DimensionSpec(
+            P1=(0,0,0), P2=(1000,1000,1000), C=(20,20,20),
+            n=(1,1,1), xdir=(1,0,1),
+            auto_text=True, arrow_style="CLOSED", text_position="ABOVE"
+        )),
+    ]
+
+    for name, spec in dims:
+        outfile = os.path.join(outdir, f"{name}.dxf")
+        dimension3d_to_dxf(spec, outfile)
+        print(f"[OK]  {outfile}")
+
 def run_iso(outdir: str = "out/tests") -> None:
+    run_dimension3d_dxf(outdir)
     run_iso_step(outdir)
     run_iso_dxf(outdir)
     run_iso_svg(outdir)
